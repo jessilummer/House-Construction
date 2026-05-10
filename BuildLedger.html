@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BuildLedger">
+<meta name="theme-color" content="#C2620A">
+<title>BuildLedger — Construction Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F5F0E8;--surface:#FFFFFF;--surfaceAlt:#F9F6F1;--surfaceDark:#EDE8DF;
+  --border:#DDD6CC;--accent:#C2620A;--accentSoft:#FEF0DC;
+  --green:#15803D;--greenSoft:#DCFCE7;--red:#B91C1C;--redSoft:#FEE2E2;
+  --blue:#1D4ED8;--blueSoft:#DBEAFE;--purple:#6D28D9;--purpleSoft:#EDE9FE;
+  --teal:#0F766E;--tealSoft:#CCFBF1;--pink:#BE185D;--pinkSoft:#FCE7F3;
+  --text:#1C1917;--textMid:#44403C;--textMuted:#78716C;--textFaint:#A8A29E;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadowMd:0 4px 20px rgba(0,0,0,.10);--r:14px;--rSm:9px;
+  --navH:64px;--hdrH:62px;
+}
+html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--text)}
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;position:relative}
+/* HEADER */
+#header{background:var(--surface);padding:10px 16px 9px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 8px rgba(0,0,0,.07);flex-shrink:0;position:relative;z-index:10}
+.hdr-left .logo{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--accent);letter-spacing:-.5px}
+.hdr-left .sub{font-size:9px;color:var(--textMuted);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-top:1px}
+.hdr-right{display:flex;gap:7px}
+.hdr-chip{border-radius:10px;padding:5px 11px;border:1px solid}
+.hdr-chip .amt{font-family:'Nunito',sans-serif;font-size:13px;font-weight:900}
+.hdr-chip .lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--textMuted);margin-top:1px}
+/* SCROLL AREA */
+#content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--navH)+8px);-webkit-overflow-scrolling:touch}
+/* BOTTOM NAV */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:20;box-shadow:0 -2px 14px rgba(0,0,0,.08)}
+.nav-btn{flex:1;padding:7px 2px 10px;background:none;border:none;cursor:pointer;color:var(--textFaint);transition:color .15s;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .icon{font-size:20px;line-height:1}
+.nav-btn .lbl{font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;text-align:center}
+.nav-btn .dot{width:16px;height:3px;background:var(--accent);border-radius:99px;margin-top:2px;box-shadow:0 0 6px var(--accent)}
+/* SCREENS */
+.screen{display:none;padding:14px 14px 6px}
+.screen.active{display:block}
+/* CARDS */
+.card{background:var(--surface);border-radius:var(--r);padding:15px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:12px}
+/* SECTION HEADER */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sec-hdr-title{font-size:12px;font-weight:800;color:var(--textMid);text-transform:uppercase;letter-spacing:1.3px}
+/* PILLS */
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.pill{background:var(--surfaceAlt);border-radius:10px;padding:8px 13px;border:1px solid var(--border);min-width:82px}
+.pill-lbl{font-size:9px;color:var(--textMuted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.pill-val{font-size:14px;font-weight:800;margin-top:3px}
+/* BADGE */
+.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;border-width:1.5px;border-style:solid}
+/* PROGRESS BAR */
+.bar-wrap{background:var(--surfaceDark);border-radius:99px;height:7px;overflow:hidden;margin-top:8px;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:all .15s;border-width:2px;border-style:solid;font-family:'Nunito Sans',sans-serif}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);padding:11px 22px;font-size:13px;box-shadow:0 2px 8px rgba(194,98,10,.33);width:100%}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-outline{background:transparent;padding:6px 13px;font-size:12px}
+.btn-close{background:var(--red);border:none;border-radius:10px;color:#fff;width:38px;height:38px;cursor:pointer;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(185,28,28,.45);flex-shrink:0;font-family:'Nunito Sans',sans-serif}
+/* FORM ELEMENTS */
+.field{margin-bottom:13px}
+.field-lbl{display:block;font-size:11px;color:var(--textMuted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.9px;font-weight:700}
+.field input,.field select,.field textarea{width:100%;background:var(--surfaceAlt);border:1.5px solid var(--border);border-radius:var(--rSm);padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:'Nunito Sans',sans-serif;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical}
+.field-hint{font-size:10px;color:var(--textMuted);margin-top:3px}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 18px 34px;max-height:93vh;overflow-y:auto;transform:translateY(40px);transition:transform .25s;box-shadow:var(--shadowMd)}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-size:17px;font-weight:800;color:var(--text);flex:1;padding-right:10px}
+/* MAT PICKER */
+.mat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.mat-chip{padding:6px 11px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;border-width:1.5px;border-style:solid}
+/* DIVIDER */
+.divider{border-top:1px solid var(--border);margin:10px 0}
+/* INFO ROW */
+.info-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0}
+.info-row .ir-lbl{color:var(--textMuted)}
+.info-row .ir-val{font-weight:600}
+/* PHOTO GRID */
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo-card{border-radius:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;box-shadow:var(--shadow);background:var(--surfaceAlt)}
+.photo-card img{width:100%;height:110px;object-fit:cover;display:block}
+.photo-no-img{width:100%;height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--surfaceDark);color:var(--textFaint)}
+.photo-card .photo-info{padding:7px 9px}
+.photo-caption{font-size:11px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px}
+/* DATE GROUP HEADER */
+.date-group-hdr{display:flex;align-items:center;gap:8px;margin-bottom:9px;margin-top:2px}
+.date-group-hdr .line{flex:1;height:1px;background:var(--border)}
+.date-group-hdr .date-lbl{font-size:11px;font-weight:800;color:var(--textMuted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+/* TAG SCROLL */
+.tag-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
+.tag-scroll::-webkit-scrollbar{display:none}
+.tag-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border-width:1.5px;border-style:solid;transition:all .12s}
+/* INSTALL BANNER */
+.install-banner{background:linear-gradient(135deg,var(--accent),#9a4e08);color:#fff;border-radius:var(--r);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.install-banner .ib-icon{font-size:28px;flex-shrink:0}
+.install-banner .ib-text .t1{font-size:13px;font-weight:800}
+.install-banner .ib-text .t2{font-size:11px;opacity:.85;margin-top:2px}
+.install-banner .ib-btn{background:#fff;color:var(--accent);border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;font-family:'Nunito Sans',sans-serif}
+/* TOAST */
+#toast{position:fixed;bottom:calc(var(--navH)+12px);left:50%;transform:translateX(-50%) translateY(20px);background:#1C1917;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:200;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* EMPTY STATE */
+.empty{text-align:center;color:var(--textMuted);padding:48px 20px}
+.empty .empty-icon{font-size:44px;margin-bottom:10px}
+.empty .empty-txt{font-size:14px}
+/* PURCHASE BOX */
+.purchase-box{background:var(--accentSoft);border:1.5px solid rgba(194,98,10,.25);border-radius:12px;padding:14px;margin-bottom:13px}
+.purchase-box-title{font-size:12px;color:var(--accent);font-weight:800;margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px}
+.two-col{display:flex;gap:10px}
+.two-col>div{flex:1}
+/* FUND SOURCE BREAKDOWN */
+.src-row{margin-bottom:8px}
+.src-row-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.src-row-top .src-name{font-weight:700}
+.bar-wrap-thin{background:var(--surfaceDark);border-radius:99px;height:4px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill-thin{height:100%;border-radius:99px;transition:width .4s}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <div id="header">
+    <div class="hdr-left">
+      <div class="logo">🏗️ BuildLedger</div>
+      <div class="sub">Construction Tracker</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-chip" style="background:var(--greenSoft);border-color:rgba(21,128,61,.2)">
+        <div class="amt" id="hdr-funds" style="color:var(--green)">₹0</div>
+        <div class="lbl">Funds In</div>
+      </div>
+      <div class="hdr-chip" style="background:var(--accentSoft);border-color:rgba(194,98,10,.2)">
+        <div class="amt" id="hdr-spent" style="color:var(--accent)">₹0</div>
+        <div class="lbl">Spent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <!-- HOUSES -->
+    <div id="screen-houses" class="screen active">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">My Houses</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openModal('modal-add-house')">+ Add House</button>
+      </div>
+      <div id="install-banner-wrap"></div>
+      <div id="houses-list"></div>
+    </div>
+
+    <!-- MATERIALS -->
+    <div id="screen-materials" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Materials</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openAddMaterial()">+ Add</button>
+      </div>
+      <div class="field"><select id="mat-house-filter" onchange="renderMaterials()"><option value="all">All Houses</option></select></div>
+      <div id="materials-list"></div>
+    </div>
+
+    <!-- SERVICES -->
+    <div id="screen-services" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Services</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openAddService()">+ Add</button>
+      </div>
+      <div class="field"><select id="svc-house-filter" onchange="renderServices()"><option value="all">All Houses</option></select></div>
+      <div id="services-list"></div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="screen-payments" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Payments</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openAddPayment()">+ Add</button>
+      </div>
+      <div class="field"><select id="pay-house-filter" onchange="renderPayments()"><option value="all">All Houses</option></select></div>
+      <div id="payments-list"></div>
+    </div>
+
+    <!-- FUNDS -->
+    <div id="screen-funds" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Fund Sources</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openAddFund()">+ Add Funds</button>
+      </div>
+      <div class="field"><select id="fund-house-filter" onchange="renderFunds()"><option value="all">All Houses</option></select></div>
+      <div id="fund-summary-pills"></div>
+      <div id="fund-breakdown"></div>
+      <div id="funds-list"></div>
+    </div>
+
+    <!-- PHOTOS -->
+    <div id="screen-photos" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Site Photos</div>
+        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openAddPhoto()">+ Upload</button>
+      </div>
+      <div class="field"><select id="photo-house-filter" onchange="renderPhotos()"><option value="all">All Houses</option></select></div>
+      <div class="tag-scroll" id="photo-tag-filter"></div>
+      <div id="photos-list"></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div id="screen-reports" class="screen">
+      <div class="sec-hdr">
+        <div class="sec-hdr-title">Reports</div>
+        <button class="btn btn-sm btn-outline" style="border-color:var(--green);color:var(--green);background:var(--greenSoft)" onclick="exportCSV()">⬇ CSV</button>
+      </div>
+      <div class="field"><select id="rpt-house-filter" onchange="renderReports()"><option value="all">All Houses</option></select></div>
+      <div class="tag-scroll" id="rpt-view-tabs" style="margin-bottom:14px"></div>
+      <div id="report-content"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="nav">
+    <button class="nav-btn active" onclick="switchTab('houses')" id="nav-houses"><span class="icon">🏠</span><span class="lbl">Houses</span><div class="dot"></div></button>
+    <button class="nav-btn" onclick="switchTab('materials')" id="nav-materials"><span class="icon">🧱</span><span class="lbl">Material</span></button>
+    <button class="nav-btn" onclick="switchTab('services')" id="nav-services"><span class="icon">🔧</span><span class="lbl">Services</span></button>
+    <button class="nav-btn" onclick="switchTab('payments')" id="nav-payments"><span class="icon">💳</span><span class="lbl">Payments</span></button>
+    <button class="nav-btn" onclick="switchTab('funds')" id="nav-funds"><span class="icon">💰</span><span class="lbl">Funds</span></button>
+    <button class="nav-btn" onclick="switchTab('photos')" id="nav-photos"><span class="icon">📷</span><span class="lbl">Photos</span></button>
+    <button class="nav-btn" onclick="switchTab('reports')" id="nav-reports"><span class="icon">📊</span><span class="lbl">Reports</span></button>
+  </nav>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+<!-- ADD HOUSE -->
+<div class="modal-overlay" id="modal-add-house" onclick="closeModalOverlay(event,'modal-add-house')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Add New House</div><button class="btn-close" onclick="closeModal('modal-add-house')">✕</button></div>
+    <div class="field"><label class="field-lbl">House Name</label><input id="ah-name" placeholder="e.g. Main Residence"></div>
+    <div class="field"><label class="field-lbl">Location</label><input id="ah-loc" placeholder="Block, Sector, City"></div>
+    <div class="field"><label class="field-lbl">Total Budget ₹</label><input id="ah-budget" type="number" placeholder="2500000"></div>
+    <div class="field"><label class="field-lbl">Start Date</label><input id="ah-date" type="date"></div>
+    <div class="field"><label class="field-lbl">Status</label><select id="ah-status"><option>Planning</option><option selected>In Progress</option><option>On Hold</option><option>Completed</option></select></div>
+    <button class="btn btn-primary" onclick="saveHouse()">Save House</button>
+  </div>
+</div>
+
+<!-- ADD MATERIAL -->
+<div class="modal-overlay" id="modal-add-material" onclick="closeModalOverlay(event,'modal-add-material')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title" id="mat-modal-title">Add Material</div><button class="btn-close" onclick="closeModal('modal-add-material')">✕</button></div>
+    <div class="field"><label class="field-lbl">House</label><select id="am-house"></select></div>
+    <div class="field">
+      <label class="field-lbl">Material Type</label>
+      <div class="mat-chips" id="mat-type-chips"></div>
+      <input id="am-custom-name" placeholder="Enter custom material name" style="display:none;margin-top:8px;width:100%;background:var(--accentSoft);border:1.5px solid var(--accent);border-radius:var(--rSm);padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:'Nunito Sans',sans-serif">
+    </div>
+    <div class="field"><label class="field-lbl">Unit <span style="font-weight:400;text-transform:none;font-size:10px">(auto-filled)</span></label><input id="am-unit" placeholder="Bags / Kg / Cu.ft"></div>
+    <div class="field"><label class="field-lbl">Estimated Quantity</label><input id="am-qty" type="number" placeholder="500"></div>
+    <div class="field"><label class="field-lbl">Estimated Total ₹</label><input id="am-est" type="number" placeholder="190000"><div class="field-hint">Budget ceiling for this material</div></div>
+    <button class="btn btn-primary" onclick="saveMaterial()">Save Material</button>
+  </div>
+</div>
+
+<!-- ADD SERVICE -->
+<div class="modal-overlay" id="modal-add-service" onclick="closeModalOverlay(event,'modal-add-service')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Add Service</div><button class="btn-close" onclick="closeModal('modal-add-service')">✕</button></div>
+    <div class="field"><label class="field-lbl">House</label><select id="as-house"></select></div>
+    <div class="field"><label class="field-lbl">Service Name</label><input id="as-name" placeholder="e.g. Masonry Work"></div>
+    <div class="field"><label class="field-lbl">Charge Type</label>
+      <select id="as-type" onchange="toggleSvcType()">
+        <option value="hourly">⏱ Hourly / Day Rate</option>
+        <option value="lumpsum">📋 Lumpsum Contract</option>
+      </select>
+    </div>
+    <div id="svc-hourly-fields">
+      <div class="field"><label class="field-lbl">Rate per Hour ₹</label><input id="as-rate" type="number" placeholder="650"></div>
+      <div class="field"><label class="field-lbl">Estimated Hours</label><input id="as-hours" type="number" placeholder="400"></div>
+    </div>
+    <div id="svc-lump-fields" style="display:none">
+      <div class="field"><label class="field-lbl">Contract Total ₹</label><input id="as-contract" type="number" placeholder="185000"></div>
+    </div>
+    <div class="field"><label class="field-lbl">Estimate ₹</label><input id="as-est" type="number" placeholder="Budget estimate"></div>
+    <button class="btn btn-primary" onclick="saveService()">Save Service</button>
+  </div>
+</div>
+
+<!-- ADD PART PAYMENT -->
+<div class="modal-overlay" id="modal-part-payment" onclick="closeModalOverlay(event,'modal-part-payment')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title" id="pp-modal-title">Part Payment</div><button class="btn-close" onclick="closeModal('modal-part-payment')">✕</button></div>
+    <div id="pp-summary" style="background:var(--surfaceAlt);border-radius:10px;padding:12px;margin-bottom:14px;border:1px solid var(--border)"></div>
+    <div class="field"><label class="field-lbl">Amount ₹</label><input id="pp-amount" type="number"></div>
+    <div class="field"><label class="field-lbl">Date</label><input id="pp-date" type="date"></div>
+    <div class="field"><label class="field-lbl">Note / Milestone</label><input id="pp-note" placeholder="e.g. Foundation complete"></div>
+    <button class="btn btn-primary" style="background:var(--purple);border-color:var(--purple)" onclick="savePartPayment()">Add Part Payment</button>
+  </div>
+</div>
+
+<!-- ADD PAYMENT -->
+<div class="modal-overlay" id="modal-add-payment" onclick="closeModalOverlay(event,'modal-add-payment')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Record Payment</div><button class="btn-close" onclick="closeModal('modal-add-payment')">✕</button></div>
+    <div class="field"><label class="field-lbl">House</label><select id="ap-house" onchange="loadPaymentRefs()"></select></div>
+    <div class="field"><label class="field-lbl">Payment For</label>
+      <select id="ap-type" onchange="loadPaymentRefs()">
+        <option value="material">🧱 Material</option>
+        <option value="service">🔧 Service</option>
+      </select>
+    </div>
+    <div class="field"><label class="field-lbl">Select Item</label><select id="ap-ref"></select></div>
+    <div id="ap-purchase-box" class="purchase-box">
+      <div class="purchase-box-title">📦 Purchase Details (for price tracking)</div>
+      <div id="ap-last-price" style="font-size:11px;color:var(--textMuted);margin-bottom:10px;background:var(--surface);border-radius:7px;padding:6px 10px;border:1px solid var(--border);display:none"></div>
+      <div class="field"><label class="field-lbl">Unit <span style="font-weight:400;text-transform:none">(Bags/Kg/Cu.ft…)</span></label><input id="ap-unit" placeholder="Auto-filled from material"><div class="field-hint">Auto-filled — edit if needed</div></div>
+      <div class="two-col">
+        <div class="field"><label class="field-lbl">Unit Price ₹</label><input id="ap-unit-price" type="number" placeholder="380" oninput="calcPayAmt()"></div>
+        <div class="field"><label class="field-lbl">Quantity</label><input id="ap-unit-qty" type="number" placeholder="100" oninput="calcPayAmt()"></div>
+      </div>
+      <div id="ap-calc-result" style="font-size:12px;color:var(--green);font-weight:700;margin-top:4px;display:none"></div>
+    </div>
+    <div class="field"><label class="field-lbl">Total Amount ₹</label><input id="ap-amount" type="number" placeholder="0"><div class="field-hint">Auto-filled from unit price × qty, or enter manually</div></div>
+    <div class="field"><label class="field-lbl">Payment Date</label><input id="ap-date" type="date"></div>
+    <div class="field"><label class="field-lbl">Note</label><input id="ap-note" placeholder="Optional note"></div>
+    <button class="btn btn-primary" onclick="savePayment()">Record Payment</button>
+  </div>
+</div>
+
+<!-- ADD FUND -->
+<div class="modal-overlay" id="modal-add-fund" onclick="closeModalOverlay(event,'modal-add-fund')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Add Fund Source</div><button class="btn-close" onclick="closeModal('modal-add-fund')">✕</button></div>
+    <div class="field"><label class="field-lbl">House</label><select id="af-house"></select></div>
+    <div class="field"><label class="field-lbl">Source of Fund</label>
+      <select id="af-source" onchange="toggleCustomFund()">
+        <option>Personal Savings</option><option>Bank Loan</option><option>Family Loan</option>
+        <option>Sale of Property</option><option>Business Income</option>
+        <option>Rental Income</option><option>Investment Return</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field" id="af-custom-wrap" style="display:none"><label class="field-lbl">Specify Source</label><input id="af-custom" placeholder="e.g. Government grant"></div>
+    <div class="field"><label class="field-lbl">Amount ₹</label><input id="af-amount" type="number" placeholder="0"></div>
+    <div class="field"><label class="field-lbl">Date Received</label><input id="af-date" type="date"></div>
+    <div class="field"><label class="field-lbl">Remark</label><textarea id="af-remark" rows="3" placeholder="e.g. SBI loan tranche 1 — transferred to construction account"></textarea></div>
+    <div style="background:var(--greenSoft);border:1px solid rgba(21,128,61,.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--green);font-weight:600">
+      💡 Cash Available = Total Funds In − Total Spent
+    </div>
+    <button class="btn btn-primary" style="background:var(--green);border-color:var(--green)" onclick="saveFund()">Add Fund Source</button>
+  </div>
+</div>
+
+<!-- ADD PHOTO -->
+<div class="modal-overlay" id="modal-add-photo" onclick="closeModalOverlay(event,'modal-add-photo')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Upload Site Photo</div><button class="btn-close" onclick="closeModal('modal-add-photo')">✕</button></div>
+    <div class="field"><label class="field-lbl">House</label><select id="aph-house"></select></div>
+    <div class="field"><label class="field-lbl">Date</label><input id="aph-date" type="date"></div>
+    <div class="field"><label class="field-lbl">Tag / Stage</label>
+      <select id="aph-tag">
+        <option>Foundation</option><option>Structure</option><option>Brickwork</option>
+        <option>Roofing</option><option>Electrical</option><option>Plumbing</option>
+        <option>Flooring</option><option>Finishing</option><option>Inspection</option><option>General</option>
+      </select>
+    </div>
+    <div class="field"><label class="field-lbl">Caption</label><textarea id="aph-caption" rows="2" placeholder="e.g. Foundation columns poured"></textarea></div>
+    <div class="field">
+      <label class="field-lbl">Photo</label>
+      <div id="aph-drop" onclick="document.getElementById('aph-file').click()" style="background:var(--surfaceAlt);border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer">
+        <div id="aph-preview-wrap">
+          <div style="font-size:36px;margin-bottom:6px">📷</div>
+          <div style="font-size:13px;color:var(--textMuted);font-weight:600">Tap to select photo</div>
+          <div style="font-size:11px;color:var(--textFaint);margin-top:3px">JPG, PNG, HEIC supported</div>
+        </div>
+      </div>
+      <input id="aph-file" type="file" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+    </div>
+    <div id="aph-remove-wrap" style="display:none;text-align:right;margin-bottom:10px">
+      <button class="btn btn-sm btn-outline" style="border-color:var(--red);color:var(--red)" onclick="removePhotoPreview()">✕ Remove photo</button>
+    </div>
+    <button class="btn btn-primary" onclick="savePhoto()">Save Photo</button>
+  </div>
+</div>
+
+<!-- VIEW PHOTO -->
+<div class="modal-overlay" id="modal-view-photo" onclick="closeModalOverlay(event,'modal-view-photo')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title" id="vph-title">Site Photo</div><button class="btn-close" onclick="closeModal('modal-view-photo')">✕</button></div>
+    <div id="vph-content"></div>
+  </div>
+</div>
+
+<!-- PRICE HISTORY -->
+<div class="modal-overlay" id="modal-price-hist" onclick="closeModalOverlay(event,'modal-price-hist')">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title" id="ph-title">Price History</div><button class="btn-close" onclick="closeModal('modal-price-hist')">✕</button></div>
+    <div id="ph-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// DATA STORE (localStorage-backed)
+// ═══════════════════════════════════════════════════════════════════════
+const DB = {
+  load(k){try{return JSON.parse(localStorage.getItem('bl_'+k)||'[]')}catch{return[]}},
+  save(k,v){localStorage.setItem('bl_'+k,JSON.stringify(v))},
+  get houses(){return this.load('houses')},     set houses(v){this.save('houses',v)},
+  get materials(){return this.load('mats')},    set materials(v){this.save('mats',v)},
+  get services(){return this.load('svcs')},     set services(v){this.save('svcs',v)},
+  get payments(){return this.load('pays')},     set payments(v){this.save('pays',v)},
+  get partPays(){return this.load('pps')},      set partPays(v){this.save('pps',v)},
+  get funds(){return this.load('funds')},       set funds(v){this.save('funds',v)},
+  get photos(){return this.load('photos')},     set photos(v){this.save('photos',v)},
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const fmt$=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+
+const MAT_CATALOG=[
+  {name:'Cement',unit:'Bags',icon:'🧱'},{name:'Rock',unit:'Cu.ft',icon:'🪨'},
+  {name:'Metal',unit:'Kg',icon:'⚙️'},{name:'Metal Sand',unit:'Cu.ft',icon:'🔩'},
+  {name:'Sand',unit:'Cu.ft',icon:'🏖️'},{name:'Brick',unit:'Nos',icon:'🏛️'},
+  {name:'Steel',unit:'Kg',icon:'🔧'},{name:'Timber',unit:'Cu.ft',icon:'🌳'},
+  {name:'Paint',unit:'Litre',icon:'🎨'},{name:'Tiles',unit:'Sq.ft',icon:'🔲'},
+  {name:'Gravel',unit:'Cu.ft',icon:'🪨'},{name:'Custom',unit:'',icon:'✏️'},
+];
+const PHOTO_TAGS=['Foundation','Structure','Brickwork','Roofing','Electrical','Plumbing','Flooring','Finishing','Inspection','General'];
+const TAG_COLORS={Foundation:'#C2620A',Structure:'#1D4ED8',Brickwork:'#B91C1C',Roofing:'#6D28D9',
+  Electrical:'#3730A3',Plumbing:'#0F766E',Flooring:'#15803D',Finishing:'#BE185D',General:'#78716C',Inspection:'#44403C'};
+const SRC_COLORS={'Personal Savings':'#15803D','Bank Loan':'#1D4ED8','Family Loan':'#6D28D9',
+  'Sale of Property':'#C2620A','Business Income':'#0F766E','Rental Income':'#BE185D','Investment Return':'#3730A3'};
+function srcColor(s){return SRC_COLORS[s]||'#44403C';}
+function matDisplayName(m){return m.materialType==='Custom'?(m.customName||'Custom'):m.materialType;}
+function catEntry(n){return MAT_CATALOG.find(c=>c.name===n)||MAT_CATALOG[MAT_CATALOG.length-1];}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════
+let currentTab='houses';
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.innerHTML=b.innerHTML.replace(/<div class="dot"><\/div>/,'')});
+  document.getElementById('screen-'+tab).classList.add('active');
+  const nb=document.getElementById('nav-'+tab);
+  nb.classList.add('active');
+  nb.insertAdjacentHTML('beforeend','<div class="dot"></div>');
+  currentTab=tab;
+  document.getElementById('content').scrollTop=0;
+  if(tab==='houses')renderHouses();
+  if(tab==='materials')renderMaterials();
+  if(tab==='services')renderServices();
+  if(tab==='payments')renderPayments();
+  if(tab==='funds')renderFunds();
+  if(tab==='photos')renderPhotos();
+  if(tab==='reports')renderReports();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalOverlay(e,id){if(e.target.classList.contains('modal-overlay'))closeModal(id);}
+function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HOUSE SELECTS (shared util)
+// ═══════════════════════════════════════════════════════════════════════
+function fillHouseSelects(){
+  const houses=DB.houses;
+  const opts=houses.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+  ['am-house','as-house','ap-house','af-house','aph-house'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=opts||'<option value="">No houses yet</option>';
+  });
+  ['mat-house-filter','svc-house-filter','pay-house-filter','fund-house-filter','photo-house-filter','rpt-house-filter'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML='<option value="all">All Houses</option>'+opts;
+  });
+}
+function houseName(id){const h=DB.houses.find(x=>x.id===id);return h?h.name:'—';}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HEADER TOTALS
+// ═══════════════════════════════════════════════════════════════════════
+function updateHeader(){
+  const spent=DB.payments.reduce((s,p)=>s+Number(p.amount),0);
+  const funds=DB.funds.reduce((s,f)=>s+Number(f.amount),0);
+  document.getElementById('hdr-spent').textContent=fmt$(spent);
+  document.getElementById('hdr-funds').textContent=fmt$(funds);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// INSTALL BANNER (PWA)
+// ═══════════════════════════════════════════════════════════════════════
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;renderInstallBanner();});
+function renderInstallBanner(){
+  const wrap=document.getElementById('install-banner-wrap');
+  if(!wrap)return;
+  if(window.matchMedia('(display-mode: standalone)').matches){wrap.innerHTML='';return;}
+  wrap.innerHTML=`<div class="install-banner">
+    <div class="ib-icon">📲</div>
+    <div class="ib-text"><div class="t1">Install BuildLedger</div><div class="t2">Add to home screen for full app experience</div></div>
+    <button class="ib-btn" onclick="installPWA()">Install</button>
+  </div>`;
+}
+function installPWA(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-banner-wrap').innerHTML='';showToast('✅ App installed on home screen!');});}
+  else{showToast('Tap browser menu → "Add to Home Screen"',3500);}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HOUSES
+// ═══════════════════════════════════════════════════════════════════════
+function renderHouses(){
+  updateHeader();fillHouseSelects();renderInstallBanner();
+  const houses=DB.houses;
+  const pays=DB.payments;const funds=DB.funds;
+  const mats=DB.materials;const svcs=DB.services;
+  const el=document.getElementById('houses-list');
+  if(!houses.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div><div class="empty-txt">No houses yet. Add your first one!</div></div>';return;}
+  const sColor={Planning:'var(--blue)',['In Progress']:'var(--accent)',['On Hold']:'var(--textMuted)',Completed:'var(--green)'};
+  el.innerHTML=houses.map(h=>{
+    const spent=pays.filter(p=>p.houseId===h.id).reduce((s,p)=>s+Number(p.amount),0);
+    const fi=funds.filter(f=>f.houseId===h.id).reduce((s,f)=>s+Number(f.amount),0);
+    const pct=h.budget?(spent/h.budget*100):0;
+    const oc=pct>90?'var(--red)':'var(--accent)';
+    const bal=h.budget-spent;
+    const mc=mats.filter(m=>m.houseId===h.id).length;
+    const sc=svcs.filter(s=>s.houseId===h.id).length;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div><div style="font-size:17px;font-weight:800;color:var(--text)">${h.name}</div>
+          <div style="font-size:12px;color:var(--textMuted);margin-top:3px">📍 ${h.location||'—'}</div></div>
+        <span class="badge" style="color:${sColor[h.status]||'var(--accent)'};background:${sColor[h.status]||'var(--accent)'}18;border-color:${sColor[h.status]||'var(--accent)'}35">${h.status}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="pills">
+        <div class="pill"><div class="pill-lbl">Budget</div><div class="pill-val" style="color:var(--textMid)">${fmt$(h.budget)}</div></div>
+        <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Funds In</div><div class="pill-val" style="color:var(--green)">${fmt$(fi)}</div></div>
+        <div class="pill" style="background:${pct>90?'var(--redSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Spent</div><div class="pill-val" style="color:${oc}">${fmt$(spent)}</div></div>
+        <div class="pill" style="background:${bal<0?'var(--redSoft)':'var(--blueSoft)'}"><div class="pill-lbl">Balance</div><div class="pill-val" style="color:${bal<0?'var(--red)':'var(--blue)'}">${fmt$(bal)}</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${oc}"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <div style="font-size:11px;color:var(--textMuted)">🧱 ${mc} materials · 🔧 ${sc} services</div>
+        <div style="font-size:11px;color:var(--textMuted)">${pct.toFixed(1)}% used</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveHouse(){
+  const name=document.getElementById('ah-name').value.trim();
+  if(!name){showToast('⚠️ House name required');return;}
+  const houses=DB.houses;
+  houses.push({id:uid(),name,location:document.getElementById('ah-loc').value.trim(),budget:Number(document.getElementById('ah-budget').value)||0,startDate:document.getElementById('ah-date').value,status:document.getElementById('ah-status').value});
+  DB.houses=houses;closeModal('modal-add-house');
+  document.getElementById('ah-name').value='';document.getElementById('ah-loc').value='';document.getElementById('ah-budget').value='';document.getElementById('ah-date').value='';
+  renderHouses();showToast('✅ House added!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MATERIALS
+// ═══════════════════════════════════════════════════════════════════════
+let selMatType='Cement';let editMatId=null;
+function openAddMaterial(){
+  editMatId=null;document.getElementById('mat-modal-title').textContent='Add Material';
+  document.getElementById('am-house').value=DB.houses[0]?.id||'';
+  selMatType='Cement';renderMatChips();
+  document.getElementById('am-unit').value='Bags';
+  document.getElementById('am-qty').value='';document.getElementById('am-est').value='';
+  document.getElementById('am-custom-name').style.display='none';
+  openModal('modal-add-material');
+}
+function renderMatChips(){
+  document.getElementById('mat-type-chips').innerHTML=MAT_CATALOG.map(c=>{
+    const on=selMatType===c.name;
+    return `<button class="mat-chip" style="background:${on?'var(--accent)':'var(--surfaceAlt)'};color:${on?'#fff':'var(--textMid)'};border-color:${on?'var(--accent)':'var(--border)'}" onclick="pickMatType('${c.name}','${c.unit}')">${c.icon} ${c.name}</button>`;
+  }).join('');
+}
+function pickMatType(name,unit){
+  selMatType=name;renderMatChips();
+  if(unit)document.getElementById('am-unit').value=unit;
+  document.getElementById('am-custom-name').style.display=name==='Custom'?'block':'none';
+}
+function saveMaterial(){
+  const houseId=document.getElementById('am-house').value;
+  if(!houseId){showToast('⚠️ Select a house');return;}
+  const mats=DB.materials;
+  const item={id:editMatId||uid(),houseId,materialType:selMatType,customName:document.getElementById('am-custom-name').value.trim(),
+    unit:document.getElementById('am-unit').value.trim(),quantity:Number(document.getElementById('am-qty').value)||0,estimate:Number(document.getElementById('am-est').value)||0};
+  if(editMatId){const i=mats.findIndex(m=>m.id===editMatId);if(i>=0)mats[i]=item;}else mats.push(item);
+  DB.materials=mats;closeModal('modal-add-material');renderMaterials();showToast(editMatId?'✅ Material updated!':'✅ Material added!');editMatId=null;
+}
+function renderMaterials(){
+  fillHouseSelects();
+  const filter=document.getElementById('mat-house-filter').value;
+  const mats=filter==='all'?DB.materials:DB.materials.filter(m=>m.houseId===filter);
+  const pays=DB.payments;
+  const el=document.getElementById('materials-list');
+  if(!mats.length){el.innerHTML='<div class="empty"><div class="empty-icon">🧱</div><div class="empty-txt">No materials found.</div></div>';return;}
+  el.innerHTML=mats.map(m=>{
+    const spent=pays.filter(p=>p.type==='material'&&p.refId===m.id).reduce((s,p)=>s+Number(p.amount),0);
+    const hist=pays.filter(p=>p.type==='material'&&p.refId===m.id&&p.unitPrice).sort((a,b)=>a.date.localeCompare(b.date));
+    const latest=hist.length?hist[hist.length-1].unitPrice:null;
+    const rise=hist.length>=2&&hist[0].unitPrice!==hist[hist.length-1].unitPrice;
+    const cat=catEntry(m.materialType);
+    const rem=Math.max(0,m.estimate-spent);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:20px">${cat.icon}</span>
+            <div style="font-size:15px;font-weight:800;color:var(--text)">${matDisplayName(m)}</div>
+            ${rise?`<span class="badge" style="color:var(--red);background:var(--redSoft);border-color:rgba(185,28,28,.2)">Price ↑</span>`:''}
+          </div>
+          <div style="font-size:12px;color:var(--textMuted);margin-top:3px">${houseName(m.houseId)} · ${m.quantity} ${m.unit} budgeted</div>
+          ${latest?`<div style="font-size:12px;color:var(--blue);font-weight:600;margin-top:2px">Latest: ${fmt$(latest)}/${m.unit}</div>`:''}
+        </div>
+        <div style="display:flex;gap:7px">
+          ${hist.length?`<button class="btn btn-sm btn-outline" style="border-color:var(--teal);color:var(--teal)" onclick="showPriceHist('${m.id}')">📈</button>`:''}
+          <button class="btn btn-sm btn-outline" onclick="editMaterial('${m.id}')">Edit</button>
+        </div>
+      </div>
+      <div class="pills" style="margin-top:12px">
+        <div class="pill"><div class="pill-lbl">Estimate</div><div class="pill-val" style="color:var(--textMid)">${fmt$(m.estimate)}</div></div>
+        <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Paid</div><div class="pill-val" style="color:var(--green)">${fmt$(spent)}</div></div>
+        <div class="pill" style="background:${rem>0?'var(--accentSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Remaining</div><div class="pill-val" style="color:${rem>0?'var(--accent)':'var(--green)'}">${fmt$(rem)}</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${m.estimate?Math.min(100,spent/m.estimate*100):0}%;background:${spent>m.estimate?'var(--red)':'var(--accent)'}"></div></div>
+      <div style="font-size:11px;color:var(--textMuted);margin-top:5px">${hist.length} purchase${hist.length!==1?'s':''} recorded</div>
+    </div>`;
+  }).join('');
+}
+function editMaterial(id){
+  const m=DB.materials.find(x=>x.id===id);if(!m)return;
+  editMatId=id;document.getElementById('mat-modal-title').textContent='Edit Material';
+  document.getElementById('am-house').value=m.houseId;
+  selMatType=m.materialType;renderMatChips();
+  document.getElementById('am-unit').value=m.unit;
+  document.getElementById('am-qty').value=m.quantity;
+  document.getElementById('am-est').value=m.estimate;
+  document.getElementById('am-custom-name').value=m.customName||'';
+  document.getElementById('am-custom-name').style.display=m.materialType==='Custom'?'block':'none';
+  openModal('modal-add-material');
+}
+function showPriceHist(matId){
+  const m=DB.materials.find(x=>x.id===matId);if(!m)return;
+  const hist=DB.payments.filter(p=>p.type==='material'&&p.refId===matId&&p.unitPrice).sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('ph-title').textContent=`📈 ${matDisplayName(m)} — Price History`;
+  const first=hist[0]?.unitPrice,last=hist[hist.length-1]?.unitPrice;
+  const chg=first&&last?((last-first)/first*100):0;
+  document.getElementById('ph-content').innerHTML=`
+    <div class="pills" style="margin-bottom:14px">
+      <div class="pill"><div class="pill-lbl">First Price</div><div class="pill-val" style="color:var(--textMid)">${fmt$(first)}/${m.unit}</div></div>
+      <div class="pill" style="background:${chg>0?'var(--redSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Latest</div><div class="pill-val" style="color:${chg>0?'var(--red)':'var(--green)'}">${fmt$(last)}/${m.unit}</div></div>
+      <div class="pill" style="background:${chg>0?'var(--redSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Change</div><div class="pill-val" style="color:${chg>0?'var(--red)':'var(--green)'}">${chg>=0?'+':''}${chg.toFixed(1)}%</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:9px 12px;background:var(--surfaceAlt);border-bottom:1px solid var(--border)">
+        ${['Date','Price','Qty','Amount'].map(h=>`<div style="font-size:10px;color:var(--textMuted);font-weight:700;text-transform:uppercase">${h}</div>`).join('')}
+      </div>
+      ${hist.map((p,i)=>{
+        const prev=i>0?hist[i-1].unitPrice:null,up=prev&&p.unitPrice>prev,dn=prev&&p.unitPrice<prev;
+        return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:9px 12px;border-bottom:${i<hist.length-1?'1px solid var(--border)':'none'};background:${i%2?'var(--surfaceAlt)':'var(--surface)'}">
+          <div style="font-size:11px;color:var(--textMuted)">${fmtDate(p.date)}</div>
+          <div style="font-size:13px;font-weight:700;color:${up?'var(--red)':dn?'var(--green)':'var(--text)'}">${fmt$(p.unitPrice)}${up?' ↑':dn?' ↓':''}</div>
+          <div style="font-size:11px;color:var(--textMuted)">${p.qty||'—'}</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600">${fmt$(p.amount)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${hist.length>=2?`<div style="margin-top:12px;background:${chg>5?'var(--redSoft)':'var(--greenSoft)'};border:1px solid ${chg>5?'var(--red)':'var(--green)'};border-radius:10px;padding:10px 14px;font-size:12px;color:${chg>5?'var(--red)':'var(--green)'};font-weight:600">
+      ${chg>5?`⚠️ Price up ${chg.toFixed(1)}% — ${fmt$(first)} → ${fmt$(last)} per ${m.unit}`:`✅ Stable — only ${Math.abs(chg).toFixed(1)}% change`}
+    </div>`:''}`;
+  openModal('modal-price-hist');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SERVICES
+// ═══════════════════════════════════════════════════════════════════════
+let ppServiceId=null;
+function openAddService(){document.getElementById('as-house').value=DB.houses[0]?.id||'';document.getElementById('as-name').value='';document.getElementById('as-type').value='hourly';document.getElementById('as-rate').value='';document.getElementById('as-hours').value='';document.getElementById('as-contract').value='';document.getElementById('as-est').value='';toggleSvcType();openModal('modal-add-service');}
+function toggleSvcType(){const t=document.getElementById('as-type').value;document.getElementById('svc-hourly-fields').style.display=t==='hourly'?'block':'none';document.getElementById('svc-lump-fields').style.display=t==='lumpsum'?'block':'none';}
+function saveService(){
+  const houseId=document.getElementById('as-house').value,name=document.getElementById('as-name').value.trim();
+  if(!houseId||!name){showToast('⚠️ Fill required fields');return;}
+  const type=document.getElementById('as-type').value;
+  const svcs=DB.services;
+  svcs.push({id:uid(),houseId,name,chargeType:type,ratePerHour:Number(document.getElementById('as-rate').value)||0,estimatedHours:Number(document.getElementById('as-hours').value)||0,contractAmount:Number(document.getElementById('as-contract').value)||0,estimate:Number(document.getElementById('as-est').value)||0});
+  DB.services=svcs;closeModal('modal-add-service');renderServices();showToast('✅ Service added!');
+}
+function renderServices(){
+  fillHouseSelects();
+  const filter=document.getElementById('svc-house-filter').value;
+  const svcs=filter==='all'?DB.services:DB.services.filter(s=>s.houseId===filter);
+  const pays=DB.payments;const pps=DB.partPays;
+  const el=document.getElementById('services-list');
+  if(!svcs.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔧</div><div class="empty-txt">No services found.</div></div>';return;}
+  el.innerHTML=svcs.map(s=>{
+    const isL=s.chargeType==='lumpsum';
+    const total=isL?s.contractAmount:s.ratePerHour*s.estimatedHours;
+    const paid=isL?pps.filter(p=>p.serviceId===s.id).reduce((a,p)=>a+Number(p.amount),0):pays.filter(p=>p.type==='service'&&p.refId===s.id).reduce((a,p)=>a+Number(p.amount),0);
+    const rem=Math.max(0,total-paid);
+    const paidPPs=pps.filter(p=>p.serviceId===s.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:15px;font-weight:800;color:var(--text)">${s.name}</div><div style="font-size:12px;color:var(--textMuted)">${houseName(s.houseId)}</div></div>
+        <span class="badge" style="color:${isL?'var(--purple)':'var(--blue)'};background:${isL?'var(--purpleSoft)':'var(--blueSoft)'};border-color:${isL?'rgba(109,40,217,.2)':'rgba(29,78,216,.2)'}">${isL?'Lumpsum':'Hourly'}</span>
+      </div>
+      <div class="pills" style="margin-top:12px">
+        <div class="pill"><div class="pill-lbl">${isL?'Contract':'Est. Total'}</div><div class="pill-val" style="color:var(--textMid)">${fmt$(total)}</div></div>
+        <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Paid</div><div class="pill-val" style="color:var(--green)">${fmt$(paid)}</div></div>
+        <div class="pill" style="background:${rem>0?'var(--redSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Remaining</div><div class="pill-val" style="color:${rem>0?'var(--red)':'var(--green)'}">${fmt$(rem)}</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${total?Math.min(100,paid/total*100):0}%;background:${isL?'var(--purple)':'var(--blue)'}"></div></div>
+      ${isL?`${paidPPs.length?`<div style="margin-top:12px;background:var(--surfaceAlt);border-radius:10px;padding:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--textMuted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Part Payments</div>
+        ${paidPPs.map(pp=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-weight:700">${fmt$(pp.amount)}</span><span style="color:var(--textMuted)">${pp.note||'—'}</span><span style="color:var(--textMuted)">${fmtDate(pp.date)}</span></div>`).join('')}
+      </div>`:''}
+      <button class="btn btn-sm btn-outline" style="margin-top:10px;border-color:var(--purple);color:var(--purple)" onclick="openPartPay('${s.id}')">+ Mark Part Payment</button>`:''}
+    </div>`;
+  }).join('');
+}
+function openPartPay(svcId){
+  ppServiceId=svcId;
+  const s=DB.services.find(x=>x.id===svcId);if(!s)return;
+  const paid=DB.partPays.filter(p=>p.serviceId===svcId).reduce((a,p)=>a+Number(p.amount),0);
+  document.getElementById('pp-modal-title').textContent=`Part Payment — ${s.name}`;
+  document.getElementById('pp-summary').innerHTML=`<div class="info-row"><span class="ir-lbl">Contract</span><span class="ir-val">${fmt$(s.contractAmount)}</span></div><div class="info-row"><span class="ir-lbl">Paid</span><span class="ir-val" style="color:var(--green)">${fmt$(paid)}</span></div><div class="info-row"><span class="ir-lbl">Remaining</span><span class="ir-val" style="color:var(--red)">${fmt$(s.contractAmount-paid)}</span></div>`;
+  document.getElementById('pp-amount').value='';document.getElementById('pp-date').value=new Date().toISOString().slice(0,10);document.getElementById('pp-note').value='';
+  openModal('modal-part-payment');
+}
+function savePartPayment(){
+  const amt=Number(document.getElementById('pp-amount').value);
+  if(!amt||!ppServiceId){showToast('⚠️ Enter amount');return;}
+  const pps=DB.partPays;
+  pps.push({id:uid(),serviceId:ppServiceId,amount:amt,date:document.getElementById('pp-date').value,note:document.getElementById('pp-note').value.trim()});
+  DB.partPays=pps;closeModal('modal-part-payment');renderServices();updateHeader();showToast('✅ Part payment recorded!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PAYMENTS
+// ═══════════════════════════════════════════════════════════════════════
+function openAddPayment(){
+  document.getElementById('ap-house').value=DB.houses[0]?.id||'';
+  document.getElementById('ap-type').value='material';
+  document.getElementById('ap-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('ap-amount').value='';document.getElementById('ap-unit').value='';document.getElementById('ap-unit-price').value='';document.getElementById('ap-unit-qty').value='';document.getElementById('ap-note').value='';
+  document.getElementById('ap-calc-result').style.display='none';
+  loadPaymentRefs();openModal('modal-add-payment');
+}
+function loadPaymentRefs(){
+  const houseId=document.getElementById('ap-house').value;
+  const type=document.getElementById('ap-type').value;
+  const isMat=type==='material';
+  document.getElementById('ap-purchase-box').style.display=isMat?'block':'none';
+  const items=isMat?DB.materials.filter(m=>!houseId||m.houseId===houseId):DB.services.filter(s=>!houseId||s.houseId===houseId);
+  document.getElementById('ap-ref').innerHTML=items.map(i=>`<option value="${i.id}">${isMat?`${catEntry(i.materialType).icon} ${matDisplayName(i)}`:i.name}</option>`).join('')||'<option value="">None found</option>';
+  if(isMat&&items.length){prefillPayUnit(items[0].id);}
+  document.getElementById('ap-last-price').style.display='none';
+}
+function prefillPayUnit(matId){
+  const m=DB.materials.find(x=>x.id===matId);if(!m)return;
+  document.getElementById('ap-unit').value=m.unit||'';
+  const last=DB.payments.filter(p=>p.type==='material'&&p.refId===matId&&p.unitPrice).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lp=document.getElementById('ap-last-price');
+  if(last){lp.textContent=`Last recorded: ${fmt$(last.unitPrice)}/${m.unit}`;lp.style.display='block';}
+  else lp.style.display='none';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ap-ref').addEventListener('change',function(){if(document.getElementById('ap-type').value==='material')prefillPayUnit(this.value);});
+});
+function calcPayAmt(){
+  const up=Number(document.getElementById('ap-unit-price').value),qty=Number(document.getElementById('ap-unit-qty').value);
+  const el=document.getElementById('ap-calc-result');
+  if(up&&qty){const a=up*qty;document.getElementById('ap-amount').value=a;el.textContent=`✓ Calculated: ${fmt$(a)}`;el.style.display='block';}
+  else el.style.display='none';
+}
+function savePayment(){
+  const houseId=document.getElementById('ap-house').value,amt=Number(document.getElementById('ap-amount').value);
+  if(!houseId||!amt){showToast('⚠️ Fill required fields');return;}
+  const type=document.getElementById('ap-type').value;
+  const pays=DB.payments;
+  const rec={id:uid(),houseId,type,refId:document.getElementById('ap-ref').value,amount:amt,date:document.getElementById('ap-date').value,note:document.getElementById('ap-note').value.trim()};
+  if(type==='material'){
+    const u=document.getElementById('ap-unit').value.trim(),up=Number(document.getElementById('ap-unit-price').value),qty=Number(document.getElementById('ap-unit-qty').value);
+    if(u)rec.unit=u;if(up){rec.unitPrice=up;rec.qty=qty||0;}
+  }
+  pays.push(rec);DB.payments=pays;closeModal('modal-add-payment');renderPayments();updateHeader();showToast('✅ Payment recorded!');
+}
+function renderPayments(){
+  fillHouseSelects();
+  const filter=document.getElementById('pay-house-filter').value;
+  const pays=(filter==='all'?DB.payments:DB.payments.filter(p=>p.houseId===filter)).sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('payments-list');
+  if(!pays.length){el.innerHTML='<div class="empty"><div class="empty-icon">💳</div><div class="empty-txt">No payments recorded.</div></div>';return;}
+  el.innerHTML=pays.map(p=>{
+    const isMat=p.type==='material';
+    const m=isMat?DB.materials.find(x=>x.id===p.refId):null;
+    const s=!isMat?DB.services.find(x=>x.id===p.refId):null;
+    const itemName=m?`${catEntry(m.materialType).icon} ${matDisplayName(m)}`:s?s.name:'—';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:18px;font-weight:800;color:var(--accent)">${fmt$(p.amount)}</div>
+          <div style="font-size:13px;color:var(--text);font-weight:600;margin-top:3px">${itemName}</div>
+          ${p.unitPrice?`<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
+            ${p.unit?`<span style="background:var(--tealSoft);color:var(--teal);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700">${p.unit}</span>`:''}
+            <span style="font-size:12px;color:var(--teal);font-weight:600">${p.qty} × ${fmt$(p.unitPrice)}</span>
+          </div>`:''}
+          <div style="font-size:11px;color:var(--textMuted);margin-top:3px">${houseName(p.houseId)} · ${fmtDate(p.date)}</div>
+          ${p.note?`<div style="font-size:11px;color:var(--textMuted);font-style:italic;margin-top:2px">"${p.note}"</div>`:''}
+        </div>
+        <span class="badge" style="color:${isMat?'var(--blue)':'var(--purple)'};background:${isMat?'var(--blueSoft)':'var(--purpleSoft)'};border-color:${isMat?'rgba(29,78,216,.2)':'rgba(109,40,217,.2)'}">${isMat?'Material':'Service'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FUNDS
+// ═══════════════════════════════════════════════════════════════════════
+function openAddFund(){document.getElementById('af-house').value=DB.houses[0]?.id||'';document.getElementById('af-source').value='Personal Savings';document.getElementById('af-amount').value='';document.getElementById('af-date').value=new Date().toISOString().slice(0,10);document.getElementById('af-remark').value='';document.getElementById('af-custom-wrap').style.display='none';openModal('modal-add-fund');}
+function toggleCustomFund(){document.getElementById('af-custom-wrap').style.display=document.getElementById('af-source').value==='Other'?'block':'none';}
+function saveFund(){
+  const houseId=document.getElementById('af-house').value,amt=Number(document.getElementById('af-amount').value);
+  if(!houseId||!amt){showToast('⚠️ Fill required fields');return;}
+  let src=document.getElementById('af-source').value;
+  if(src==='Other')src=document.getElementById('af-custom').value.trim()||'Other';
+  const funds=DB.funds;
+  funds.push({id:uid(),houseId,source:src,amount:amt,date:document.getElementById('af-date').value,remark:document.getElementById('af-remark').value.trim()});
+  DB.funds=funds;closeModal('modal-add-fund');renderFunds();updateHeader();showToast('✅ Fund source added!');
+}
+function renderFunds(){
+  fillHouseSelects();
+  const filter=document.getElementById('fund-house-filter').value;
+  const funds=(filter==='all'?DB.funds:DB.funds.filter(f=>f.houseId===filter)).sort((a,b)=>b.date.localeCompare(a.date));
+  const pays=DB.payments.filter(p=>filter==='all'||p.houseId===filter);
+  const totalIn=funds.reduce((s,f)=>s+Number(f.amount),0);
+  const totalSpent=pays.reduce((s,p)=>s+Number(p.amount),0);
+  const bal=totalIn-totalSpent;
+  document.getElementById('fund-summary-pills').innerHTML=`<div class="pills">
+    <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Funds In</div><div class="pill-val" style="color:var(--green)">${fmt$(totalIn)}</div></div>
+    <div class="pill" style="background:var(--redSoft)"><div class="pill-lbl">Spent</div><div class="pill-val" style="color:var(--red)">${fmt$(totalSpent)}</div></div>
+    <div class="pill" style="background:${bal<0?'var(--redSoft)':'var(--blueSoft)'}"><div class="pill-lbl">Cash Avail.</div><div class="pill-val" style="color:${bal<0?'var(--red)':'var(--blue)'}">${fmt$(bal)}</div></div>
+  </div>`;
+  // Breakdown
+  const bySrc={};funds.forEach(f=>{if(!bySrc[f.source])bySrc[f.source]=0;bySrc[f.source]+=Number(f.amount);});
+  const srcEntries=Object.entries(bySrc).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('fund-breakdown').innerHTML=srcEntries.length?`<div class="card" style="padding:14px;margin-bottom:12px">
+    <div style="font-size:11px;font-weight:800;color:var(--textMid);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Breakdown by Source</div>
+    ${srcEntries.map(([src,amt])=>`<div class="src-row"><div class="src-row-top"><span class="src-name" style="color:${srcColor(src)}">💰 ${src}</span><span style="color:var(--textMid);font-weight:700">${fmt$(amt)} <span style="color:var(--textMuted);font-weight:400">${totalIn?(amt/totalIn*100).toFixed(1):0}%</span></span></div><div class="bar-wrap-thin"><div class="bar-fill-thin" style="width:${totalIn?(amt/totalIn*100):0}%;background:${srcColor(src)}"></div></div></div>`).join('')}
+  </div>`:'';
+  const el=document.getElementById('funds-list');
+  if(!funds.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-txt">No funds recorded yet.</div></div>';return;}
+  el.innerHTML=funds.map(f=>`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:18px;font-weight:800;color:var(--green)">+${fmt$(f.amount)}</div>
+        <div style="margin-top:4px"><span class="badge" style="color:${srcColor(f.source)};background:${srcColor(f.source)}18;border-color:${srcColor(f.source)}33">💰 ${f.source}</span></div>
+        <div style="font-size:11px;color:var(--textMuted);margin-top:4px">${houseName(f.houseId)} · ${fmtDate(f.date)}</div>
+        ${f.remark?`<div style="font-size:11px;color:var(--textMuted);font-style:italic;margin-top:2px">"${f.remark}"</div>`:''}
+      </div>
+      <span class="badge" style="color:var(--green);background:var(--greenSoft);border-color:rgba(21,128,61,.2)">Fund In</span>
+    </div>
+  </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHOTOS
+// ═══════════════════════════════════════════════════════════════════════
+let photoPreviewData=null;let activePhotoTag='All';
+function openAddPhoto(){
+  document.getElementById('aph-house').value=DB.houses[0]?.id||'';
+  document.getElementById('aph-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('aph-tag').value='General';
+  document.getElementById('aph-caption').value='';
+  photoPreviewData=null;
+  document.getElementById('aph-preview-wrap').innerHTML='<div style="font-size:36px;margin-bottom:6px">📷</div><div style="font-size:13px;color:var(--textMuted);font-weight:600">Tap to select photo</div><div style="font-size:11px;color:var(--textFaint);margin-top:3px">JPG, PNG, HEIC supported</div>';
+  document.getElementById('aph-remove-wrap').style.display='none';
+  openModal('modal-add-photo');
+}
+function previewPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    photoPreviewData=ev.target.result;
+    document.getElementById('aph-preview-wrap').innerHTML=`<img src="${photoPreviewData}" style="max-width:100%;max-height:180px;border-radius:9px;object-fit:contain">`;
+    document.getElementById('aph-remove-wrap').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+function removePhotoPreview(){photoPreviewData=null;document.getElementById('aph-preview-wrap').innerHTML='<div style="font-size:36px;margin-bottom:6px">📷</div><div style="font-size:13px;color:var(--textMuted);font-weight:600">Tap to select photo</div>';document.getElementById('aph-remove-wrap').style.display='none';document.getElementById('aph-file').value='';}
+function savePhoto(){
+  const houseId=document.getElementById('aph-house').value;
+  if(!houseId){showToast('⚠️ Select a house');return;}
+  const photos=DB.photos;
+  photos.push({id:uid(),houseId,date:document.getElementById('aph-date').value,tag:document.getElementById('aph-tag').value,caption:document.getElementById('aph-caption').value.trim(),dataUrl:photoPreviewData});
+  DB.photos=photos;closeModal('modal-add-photo');renderPhotos();showToast('✅ Photo saved!');
+}
+function renderPhotos(){
+  fillHouseSelects();
+  const hFilter=document.getElementById('photo-house-filter').value;
+  // Tag chips
+  const tagWrap=document.getElementById('photo-tag-filter');
+  const allTags=['All',...PHOTO_TAGS];
+  tagWrap.innerHTML=allTags.map(t=>{const on=activePhotoTag===t;return `<button class="tag-chip" style="background:${on?(t==='All'?'var(--textMid)':TAG_COLORS[t]||'var(--textMid)'):'var(--surface)'};color:${on?'#fff':(t==='All'?'var(--textMuted)':TAG_COLORS[t]||'var(--textMuted)')};border-color:${on?(t==='All'?'var(--textMid)':TAG_COLORS[t]||'var(--textMid)'):' var(--border)'}" onclick="setPhotoTag('${t}')">${t}</button>`;}).join('');
+  let photos=hFilter==='all'?DB.photos:DB.photos.filter(p=>p.houseId===hFilter);
+  if(activePhotoTag!=='All')photos=photos.filter(p=>p.tag===activePhotoTag);
+  photos.sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('photos-list');
+  if(!photos.length){el.innerHTML='<div class="empty"><div class="empty-icon">📷</div><div class="empty-txt">No photos yet. Upload your first site photo!</div></div>';return;}
+  const byDate={};photos.forEach(p=>{const d=p.date||'Unknown';if(!byDate[d])byDate[d]=[];byDate[d].push(p);});
+  el.innerHTML=Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,list])=>`
+    <div class="date-group-hdr"><div class="line"></div><div class="date-lbl">📅 ${fmtDate(date)}</div><div class="line"></div></div>
+    <div class="photo-grid" style="margin-bottom:16px">
+      ${list.map(ph=>`<div class="photo-card" onclick="viewPhoto('${ph.id}')">
+        ${ph.dataUrl?`<img src="${ph.dataUrl}" alt="${ph.caption}">`:`<div class="photo-no-img"><span style="font-size:28px">📷</span><span style="font-size:10px">No image</span></div>`}
+        <div class="photo-info">
+          <div class="photo-caption">${ph.caption||'No caption'}</div>
+          <span style="font-size:10px;font-weight:700;color:${TAG_COLORS[ph.tag]||'var(--textMuted)'};background:${TAG_COLORS[ph.tag]||'var(--textMuted)'}18;border:1px solid ${TAG_COLORS[ph.tag]||'var(--textMuted)'}33;border-radius:6px;padding:2px 7px">${ph.tag}</span>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+function setPhotoTag(tag){activePhotoTag=tag;renderPhotos();}
+function viewPhoto(id){
+  const ph=DB.photos.find(x=>x.id===id);if(!ph)return;
+  document.getElementById('vph-title').textContent=ph.caption||'Site Photo';
+  document.getElementById('vph-content').innerHTML=`
+    ${ph.dataUrl?`<img src="${ph.dataUrl}" style="width:100%;border-radius:12px;max-height:320px;object-fit:contain;margin-bottom:14px">`:`<div style="height:160px;background:var(--surfaceAlt);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:40px">📷</div>`}
+    <div class="pills" style="margin-bottom:10px">
+      <div class="pill"><div class="pill-lbl">Date</div><div class="pill-val" style="color:var(--textMid);font-size:12px">${fmtDate(ph.date)}</div></div>
+      <div class="pill" style="background:${TAG_COLORS[ph.tag]||'var(--textMuted)'}18"><div class="pill-lbl">Stage</div><div class="pill-val" style="color:${TAG_COLORS[ph.tag]||'var(--textMuted)'};font-size:12px">${ph.tag}</div></div>
+      <div class="pill" style="background:var(--blueSoft)"><div class="pill-lbl">House</div><div class="pill-val" style="color:var(--blue);font-size:12px">${houseName(ph.houseId)}</div></div>
+    </div>
+    ${ph.caption?`<div style="background:var(--surfaceAlt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--textMid);font-style:italic;border:1px solid var(--border)">"${ph.caption}"</div>`:''}`;
+  openModal('modal-view-photo');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════════════════════
+let rptView='summary';
+const RPT_VIEWS=['summary','funds','period','material','service','prices'];
+const RPT_LABELS={summary:'Summary',funds:'💰 Funds',period:'Period',material:'Material',service:'Service',prices:'📈 Prices'};
+const RPT_COLORS={summary:null,funds:'#15803D',period:null,material:'#1D4ED8',service:'#6D28D9',prices:'#0F766E'};
+function renderReports(){
+  fillHouseSelects();
+  const tabWrap=document.getElementById('rpt-view-tabs');
+  tabWrap.innerHTML=RPT_VIEWS.map(v=>{
+    const on=rptView===v,c=RPT_COLORS[v]||'var(--accent)';
+    return `<button class="tag-chip" style="background:${on?c:'var(--surface)'};color:${on?'#fff':c};border-color:${on?c:'var(--border)'}" onclick="setRptView('${v}')">${RPT_LABELS[v]}</button>`;
+  }).join('');
+  const hFilter=document.getElementById('rpt-house-filter').value;
+  const pays=hFilter==='all'?DB.payments:DB.payments.filter(p=>p.houseId===hFilter);
+  const funds=hFilter==='all'?DB.funds:DB.funds.filter(f=>f.houseId===hFilter);
+  const houses=hFilter==='all'?DB.houses:DB.houses.filter(h=>h.id===hFilter);
+  const mats=hFilter==='all'?DB.materials:DB.materials.filter(m=>m.houseId===hFilter);
+  const svcs=hFilter==='all'?DB.services:DB.services.filter(s=>s.houseId===hFilter);
+  const el=document.getElementById('report-content');
+
+  if(rptView==='summary'){
+    const totalEst=houses.reduce((s,h)=>s+Number(h.budget),0);
+    const totalSpent=pays.reduce((s,p)=>s+Number(p.amount),0);
+    const totalFunds=funds.reduce((s,f)=>s+Number(f.amount),0);
+    el.innerHTML=`<div class="pills" style="margin-bottom:14px">
+      <div class="pill"><div class="pill-lbl">Budget</div><div class="pill-val" style="color:var(--textMid)">${fmt$(totalEst)}</div></div>
+      <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Funds In</div><div class="pill-val" style="color:var(--green)">${fmt$(totalFunds)}</div></div>
+      <div class="pill" style="background:var(--redSoft)"><div class="pill-lbl">Spent</div><div class="pill-val" style="color:var(--red)">${fmt$(totalSpent)}</div></div>
+      <div class="pill" style="background:var(--blueSoft)"><div class="pill-lbl">Balance</div><div class="pill-val" style="color:var(--blue)">${fmt$(totalEst-totalSpent)}</div></div>
+    </div>
+    ${houses.map(h=>{
+      const hP=DB.payments.filter(p=>p.houseId===h.id);
+      const mat=hP.filter(p=>p.type==='material').reduce((s,p)=>s+Number(p.amount),0);
+      const svc=hP.filter(p=>p.type==='service').reduce((s,p)=>s+Number(p.amount),0)+DB.partPays.filter(pp=>DB.services.filter(s=>s.houseId===h.id).map(s=>s.id).includes(pp.serviceId)).reduce((s,pp)=>s+Number(pp.amount),0);
+      const fi=DB.funds.filter(f=>f.houseId===h.id).reduce((s,f)=>s+Number(f.amount),0);
+      const tot=mat+svc;
+      return `<div class="card">
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">${h.name}</div>
+        <div class="info-row"><span class="ir-lbl">🧱 Materials</span><span class="ir-val" style="color:var(--blue)">${fmt$(mat)}</span></div>
+        <div class="info-row"><span class="ir-lbl">🔧 Services</span><span class="ir-val" style="color:var(--purple)">${fmt$(svc)}</span></div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="ir-lbl">Total Spent</span><span class="ir-val" style="color:var(--accent)">${fmt$(tot)}</span></div>
+        <div class="info-row"><span class="ir-lbl">💰 Funds In</span><span class="ir-val" style="color:var(--green)">${fmt$(fi)}</span></div>
+        <div class="info-row"><span class="ir-lbl">Cash Available</span><span class="ir-val" style="color:${fi-tot<0?'var(--red)':'var(--blue)'}">${fmt$(fi-tot)}</span></div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${h.budget?Math.min(100,tot/h.budget*100):0}%;background:${tot>h.budget?'var(--red)':'var(--accent)'}"></div></div>
+        <div style="font-size:11px;color:var(--textMuted);margin-top:6px">Budget ${fmt$(h.budget)} · Balance <span style="color:${h.budget-tot<0?'var(--red)':'var(--green)'};font-weight:700">${fmt$(h.budget-tot)}</span></div>
+      </div>`;
+    }).join('')}`;
+  }
+  else if(rptView==='funds'){
+    const sorted=funds.sort((a,b)=>b.date.localeCompare(a.date));
+    const totIn=sorted.reduce((s,f)=>s+Number(f.amount),0);
+    el.innerHTML=`<div class="pills" style="margin-bottom:12px">
+      <div class="pill" style="background:var(--greenSoft)"><div class="pill-lbl">Total In</div><div class="pill-val" style="color:var(--green)">${fmt$(totIn)}</div></div>
+    </div>
+    ${sorted.length?sorted.map(f=>`<div class="card"><div style="font-size:17px;font-weight:800;color:var(--green)">+${fmt$(f.amount)}</div><div style="font-size:12px;color:var(--textMid);font-weight:700;margin-top:3px">💰 ${f.source}</div><div style="font-size:11px;color:var(--textMuted);margin-top:2px">${houseName(f.houseId)} · ${fmtDate(f.date)}</div>${f.remark?`<div style="font-size:11px;color:var(--textMuted);font-style:italic;margin-top:2px">"${f.remark}"</div>`:''}</div>`).join(''):'<div class="empty"><div class="empty-icon">💰</div><div class="empty-txt">No fund records.</div></div>'}`;
+  }
+  else if(rptView==='period'){
+    const byM={};pays.forEach(p=>{const m=(p.date||'').slice(0,7)||'Unknown';if(!byM[m])byM[m]={mat:0,svc:0};if(p.type==='material')byM[m].mat+=Number(p.amount);else byM[m].svc+=Number(p.amount);});
+    const entries=Object.entries(byM).sort((a,b)=>a[0].localeCompare(b[0]));
+    el.innerHTML=entries.length?entries.map(([m,d])=>`<div class="card"><div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px">${m}</div><div class="pills"><div class="pill" style="background:var(--blueSoft)"><div class="pill-lbl">Materials</div><div class="pill-val" style="color:var(--blue)">${fmt$(d.mat)}</div></div><div class="pill" style="background:var(--purpleSoft)"><div class="pill-lbl">Services</div><div class="pill-val" style="color:var(--purple)">${fmt$(d.svc)}</div></div><div class="pill" style="background:var(--accentSoft)"><div class="pill-lbl">Total</div><div class="pill-val" style="color:var(--accent)">${fmt$(d.mat+d.svc)}</div></div></div></div>`).join(''):'<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">No payment data.</div></div>';
+  }
+  else if(rptView==='material'){
+    const totMat=mats.reduce((s,m)=>s+pays.filter(p=>p.type==='material'&&p.refId===m.id).reduce((a,p)=>a+Number(p.amount),0),0);
+    el.innerHTML=`<div style="font-size:13px;color:var(--textMuted);margin-bottom:10px">Total: <span style="color:var(--blue);font-weight:800">${fmt$(totMat)}</span></div>
+    ${mats.map(m=>{const spent=pays.filter(p=>p.type==='material'&&p.refId===m.id).reduce((s,p)=>s+Number(p.amount),0);return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:800;color:var(--text)">${catEntry(m.materialType).icon} ${matDisplayName(m)}</div><div style="font-size:11px;color:var(--textMuted)">${houseName(m.houseId)} · ${m.quantity} ${m.unit}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:800;color:var(--blue)">${fmt$(spent)}</div><div style="font-size:11px;color:var(--textMuted)">of ${fmt$(m.estimate)}</div></div></div><div class="bar-wrap"><div class="bar-fill" style="width:${m.estimate?Math.min(100,spent/m.estimate*100):0}%;background:var(--blue)"></div></div></div>`;}).join('')}`;
+  }
+  else if(rptView==='service'){
+    el.innerHTML=svcs.map(s=>{
+      const isL=s.chargeType==='lumpsum';
+      const tot=isL?s.contractAmount:s.ratePerHour*s.estimatedHours;
+      const spent=isL?DB.partPays.filter(p=>p.serviceId===s.id).reduce((a,p)=>a+Number(p.amount),0):pays.filter(p=>p.type==='service'&&p.refId===s.id).reduce((a,p)=>a+Number(p.amount),0);
+      return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:800">${s.name}</div><div style="font-size:11px;color:var(--textMuted)">${houseName(s.houseId)}</div></div><span class="badge" style="color:${isL?'var(--purple)':'var(--blue)'};background:${isL?'var(--purpleSoft)':'var(--blueSoft)'};border-color:${isL?'rgba(109,40,217,.2)':'rgba(29,78,216,.2)'}">${isL?'Lumpsum':'Hourly'}</span></div><div class="pills" style="margin-top:10px"><div class="pill" style="background:var(--purpleSoft)"><div class="pill-lbl">Paid</div><div class="pill-val" style="color:var(--purple)">${fmt$(spent)}</div></div><div class="pill"><div class="pill-lbl">Total</div><div class="pill-val" style="color:var(--textMid)">${fmt$(tot)}</div></div><div class="pill" style="background:${spent>=tot?'var(--greenSoft)':'var(--redSoft)'}"><div class="pill-lbl">Remaining</div><div class="pill-val" style="color:${spent>=tot?'var(--green)':'var(--red)'}">${fmt$(Math.max(0,tot-spent))}</div></div></div><div class="bar-wrap"><div class="bar-fill" style="width:${tot?Math.min(100,spent/tot*100):0}%;background:var(--purple)"></div></div></div>`;
+    }).join('')||'<div class="empty"><div class="empty-icon">🔧</div><div class="empty-txt">No service data.</div></div>';
+  }
+  else if(rptView==='prices'){
+    const priceCards=mats.map(m=>{
+      const hist=DB.payments.filter(p=>p.type==='material'&&p.refId===m.id&&p.unitPrice).sort((a,b)=>a.date.localeCompare(b.date));
+      if(!hist.length)return null;
+      const first=hist[0].unitPrice,last=hist[hist.length-1].unitPrice,chg=first?((last-first)/first*100):0;
+      const cat=catEntry(m.materialType);
+      return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><div style="font-size:15px;font-weight:800">${cat.icon} ${matDisplayName(m)}</div><div style="font-size:11px;color:var(--textMuted)">${houseName(m.houseId)} · per ${m.unit}</div></div>${chg!==0?`<span class="badge" style="color:${chg>0?'var(--red)':'var(--green)'};background:${chg>0?'var(--redSoft)':'var(--greenSoft)'};border-color:${chg>0?'rgba(185,28,28,.2)':'rgba(21,128,61,.2)'}">${chg>0?'▲':'▼'} ${Math.abs(chg).toFixed(1)}%</span>`:''}</div>
+      <div class="pills" style="margin-bottom:10px"><div class="pill"><div class="pill-lbl">First</div><div class="pill-val" style="color:var(--textMid);font-size:12px">${fmt$(first)}</div></div><div class="pill" style="background:${chg>0?'var(--redSoft)':'var(--greenSoft)'}"><div class="pill-lbl">Latest</div><div class="pill-val" style="color:${chg>0?'var(--red)':'var(--green)'};font-size:12px">${fmt$(last)}</div></div><div class="pill" style="background:var(--blueSoft)"><div class="pill-lbl">Buys</div><div class="pill-val" style="color:var(--blue)">${hist.length}</div></div></div>
+      <div class="card" style="padding:0;overflow:hidden;box-shadow:none">
+        ${hist.map((p,i)=>{const prev=i>0?hist[i-1].unitPrice:null,up=prev&&p.unitPrice>prev,dn=prev&&p.unitPrice<prev;return `<div style="display:flex;align-items:center;padding:7px 11px;border-bottom:${i<hist.length-1?'1px solid var(--border)':'none'};background:${i%2?'var(--surfaceAlt)':'var(--surface)'}"><div style="width:8px;height:8px;border-radius:50%;background:${up?'var(--red)':dn?'var(--green)':'var(--textFaint)'};margin-right:9px;flex-shrink:0"></div><div style="font-size:11px;color:var(--textMuted);min-width:80px">${fmtDate(p.date)}</div><div style="font-size:13px;font-weight:700;color:${up?'var(--red)':dn?'var(--green)':'var(--text)'};flex:1">${fmt$(p.unitPrice)}${up?` <span style="font-size:10px">↑+${fmt$(p.unitPrice-prev)}</span>`:dn?` <span style="font-size:10px">↓-${fmt$(prev-p.unitPrice)}</span>`:''}</div><div style="font-size:11px;color:var(--textMuted)">${p.qty} ${m.unit}</div></div>`;}).join('')}
+      </div>
+      ${chg>10?`<div style="margin-top:9px;background:var(--redSoft);border:1px solid rgba(185,28,28,.2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--red);font-weight:600">⚠️ Significant increase — review with supplier</div>`:''}
+    </div>`;
+    }).filter(Boolean);
+    el.innerHTML=priceCards.length?priceCards.join(''):'<div class="empty"><div class="empty-icon">📈</div><div class="empty-txt">No price data yet. Record payments with unit price.</div></div>';
+  }
+}
+function setRptView(v){rptView=v;renderReports();}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════════════════════════════════════
+function exportCSV(){
+  const rows=[['Date','House','Type','Item','Unit','Qty','Unit Price','Amount','Note']];
+  DB.payments.sort((a,b)=>b.date.localeCompare(a.date)).forEach(p=>{
+    const isMat=p.type==='material';
+    const m=isMat?DB.materials.find(x=>x.id===p.refId):null;
+    const s=!isMat?DB.services.find(x=>x.id===p.refId):null;
+    rows.push([p.date,houseName(p.houseId),p.type,m?matDisplayName(m):s?s.name:'—',p.unit||'—',p.qty||'—',p.unitPrice||'—',p.amount,p.note||'—']);
+  });
+  rows.push([]);
+  rows.push(['Date','House','Source','Amount','Remark']);
+  DB.funds.sort((a,b)=>b.date.localeCompare(a.date)).forEach(f=>rows.push([f.date,houseName(f.houseId),f.source,f.amount,f.remark||'—']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`BuildLedger_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  showToast('✅ CSV downloaded!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  fillHouseSelects();renderHouses();
+  // Init date fields
+  const today=new Date().toISOString().slice(0,10);
+  ['ah-date','ap-date','af-date','aph-date','pp-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+  renderInstallBanner();
+});
+
+// SERVICE WORKER for offline
+if('serviceWorker' in navigator){
+  const sw=`
+    const CACHE='buildledger-v1';
+    const URLS=['/'];
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS))));
+    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/')))));
+  `;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
